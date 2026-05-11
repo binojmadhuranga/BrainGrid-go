@@ -1,0 +1,89 @@
+package controllers
+
+import (
+    "net/http"
+
+    "github.com/binojmadhuranga/BrainGrid-go/dto"
+    "github.com/binojmadhuranga/BrainGrid-go/models"
+    "github.com/binojmadhuranga/BrainGrid-go/services"
+    "github.com/binojmadhuranga/BrainGrid-go/utils"
+
+    "github.com/gin-gonic/gin"
+)
+
+func Register(c *gin.Context) {
+
+    var request dto.RegisterRequest
+
+    if err := c.ShouldBindJSON(&request); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error": err.Error(),
+        })
+        return
+    }
+
+    hashedPassword, _ := utils.HashPassword(request.Password)
+
+    user := models.User{
+        Name:     request.Name,
+        Email:    request.Email,
+        Password: hashedPassword,
+    }
+
+    err := services.CreateUser(&user)
+
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error": "User already exists",
+        })
+        return
+    }
+
+    c.JSON(http.StatusCreated, gin.H{
+        "message": "User registered successfully",
+    })
+}
+
+func Login(c *gin.Context) {
+
+    var request dto.LoginRequest
+
+    if err := c.ShouldBindJSON(&request); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error": err.Error(),
+        })
+        return
+    }
+
+    user, err := services.FindUserByEmail(request.Email)
+
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{
+            "error": "Invalid credentials",
+        })
+        return
+    }
+
+    validPassword := utils.CheckPassword(
+        request.Password,
+        user.Password,
+    )
+
+    if !validPassword {
+        c.JSON(http.StatusUnauthorized, gin.H{
+            "error": "Invalid credentials",
+        })
+        return
+    }
+
+    token, _ := utils.GenerateToken(user.ID)
+
+    c.JSON(http.StatusOK, gin.H{
+        "token": token,
+        "user": gin.H{
+            "id":    user.ID,
+            "name":  user.Name,
+            "email": user.Email,
+        },
+    })
+}

@@ -1,89 +1,79 @@
 package controllers
 
 import (
-    "net/http"
+	"net/http"
 
-    "github.com/binojmadhuranga/BrainGrid-go/dto"
-    "github.com/binojmadhuranga/BrainGrid-go/models"
-    "github.com/binojmadhuranga/BrainGrid-go/services"
-    "github.com/binojmadhuranga/BrainGrid-go/utils"
+	"github.com/binojmadhuranga/BrainGrid-go/dto"
+	"github.com/binojmadhuranga/BrainGrid-go/services"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 func Register(c *gin.Context) {
 
-    var request dto.RegisterRequest
+	var request dto.RegisterRequest
 
-    if err := c.ShouldBindJSON(&request); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{
-            "error": err.Error(),
-        })
-        return
-    }
+	// Validate request body
+	if err := c.ShouldBindJSON(&request); err != nil {
 
-    hashedPassword, _ := utils.HashPassword(request.Password)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 
-    user := models.User{
-        Name:     request.Name,
-        Email:    request.Email,
-        Password: hashedPassword,
-    }
+		return
+	}
 
-    err := services.CreateUser(&user)
+	// Call service
+	err := services.RegisterUser(request)
 
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{
-            "error": "User already exists",
-        })
-        return
-    }
+	if err != nil {
 
-    c.JSON(http.StatusCreated, gin.H{
-        "message": "User registered successfully",
-    })
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "User registered successfully",
+	})
 }
 
 func Login(c *gin.Context) {
 
-    var request dto.LoginRequest
+	var request dto.LoginRequest
 
-    if err := c.ShouldBindJSON(&request); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{
-            "error": err.Error(),
-        })
-        return
-    }
+	// Validate request body
+	if err := c.ShouldBindJSON(&request); err != nil {
 
-    user, err := services.FindUserByEmail(request.Email)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{
-            "error": "Invalid credentials",
-        })
-        return
-    }
+		return
+	}
 
-    validPassword := utils.CheckPassword(
-        request.Password,
-        user.Password,
-    )
+	// Call service
+	token, user, err := services.LoginUser(
+		request,
+	)
 
-    if !validPassword {
-        c.JSON(http.StatusUnauthorized, gin.H{
-            "error": "Invalid credentials",
-        })
-        return
-    }
+	if err != nil {
 
-    token, _ := utils.GenerateToken(user.ID)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": err.Error(),
+		})
 
-    c.JSON(http.StatusOK, gin.H{
-        "token": token,
-        "user": gin.H{
-            "id":    user.ID,
-            "name":  user.Name,
-            "email": user.Email,
-        },
-    })
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+		"user": gin.H{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+		},
+	})
 }

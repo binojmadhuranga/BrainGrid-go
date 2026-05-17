@@ -7,6 +7,7 @@ import (
 	"github.com/binojmadhuranga/BrainGrid-go/models"
 	"github.com/binojmadhuranga/BrainGrid-go/repositories"
 	"github.com/binojmadhuranga/BrainGrid-go/utils"
+    "github.com/binojmadhuranga/BrainGrid-go/constants"
 )
 
 func RegisterUser(request dto.RegisterRequest) error {
@@ -34,6 +35,7 @@ func RegisterUser(request dto.RegisterRequest) error {
 		Name:     request.Name,
 		Email:    request.Email,
 		Password: hashedPassword,
+        Role:     constants.ROLE_USER,
 	}
 
 	// Save user

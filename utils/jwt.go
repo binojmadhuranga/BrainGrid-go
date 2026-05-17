@@ -1,21 +1,28 @@
 package utils
 
 import (
-    "time"
-
-    "github.com/golang-jwt/jwt/v5"
+	"os"
+	"time"
+    
+	"github.com/binojmadhuranga/BrainGrid-go/models"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtKey = []byte("super_secret_key")
+var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 
-func GenerateToken(userID uint) (string, error) {
+func GenerateToken(user models.User) (string, error) {
 
-    claims := jwt.MapClaims{
-        "user_id": userID,
-        "exp":     time.Now().Add(time.Hour * 24).Unix(),
-    }
+	claims := jwt.MapClaims{
+		"user_id": user.ID,
+		"email":   user.Email,
+		"role":    user.Role,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+	}
 
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		claims,
+	)
 
-    return token.SignedString(jwtKey)
+	return token.SignedString(jwtKey)
 }

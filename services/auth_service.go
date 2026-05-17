@@ -3,11 +3,11 @@ package services
 import (
 	"errors"
 
+	"github.com/binojmadhuranga/BrainGrid-go/constants"
 	"github.com/binojmadhuranga/BrainGrid-go/dto"
 	"github.com/binojmadhuranga/BrainGrid-go/models"
 	"github.com/binojmadhuranga/BrainGrid-go/repositories"
 	"github.com/binojmadhuranga/BrainGrid-go/utils"
-    "github.com/binojmadhuranga/BrainGrid-go/constants"
 )
 
 func RegisterUser(request dto.RegisterRequest) error {
@@ -35,7 +35,7 @@ func RegisterUser(request dto.RegisterRequest) error {
 		Name:     request.Name,
 		Email:    request.Email,
 		Password: hashedPassword,
-        Role:     constants.ROLE_USER,
+		Role:     constants.ROLE_USER,
 	}
 
 	// Save user
@@ -69,7 +69,7 @@ func LoginUser(
 	}
 
 	// Generate JWT token
-	token, err := utils.GenerateToken(user.ID)
+	token, err := utils.GenerateToken(user)
 
 	if err != nil {
 		return "", models.User{}, err

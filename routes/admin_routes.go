@@ -1,15 +1,15 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"github.com/binojmadhuranga/BrainGrid-go/controllers"
 	"github.com/binojmadhuranga/BrainGrid-go/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
-func AdminRoutes(r *gin.RouterGroup) {
+func RegisterAdminRoutes(api *gin.RouterGroup) {
 
-	admin := r.Group("/admin")
+	admin := api.Group("/admin")
 
 	admin.Use(middleware.JWTAuthMiddleware())
 	admin.Use(middleware.AdminMiddleware())

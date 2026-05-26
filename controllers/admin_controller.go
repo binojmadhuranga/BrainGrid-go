@@ -4,14 +4,14 @@ import (
 	"net/http"
 
 	adminDto "github.com/binojmadhuranga/BrainGrid-go/dto/admin"
-	"github.com/binojmadhuranga/BrainGrid-go/repositories"
+	"github.com/binojmadhuranga/BrainGrid-go/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GetUsers(c *gin.Context) {
 
-	users, err := repositories.GetAllUsers()
+	users, err := services.GetUsersService()
 
 	if err != nil {
 
@@ -40,23 +40,22 @@ func UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	user, err := repositories.FindUserByID(id)
+	err := services.UpdateUserRoleService(
+		id,
+		request.Role,
+	)
 
 	if err != nil {
 
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "User not found",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
 		})
 
 		return
 	}
 
-	user.Role = request.Role
-
-	repositories.UpdateUser(&user)
-
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Role updated",
+		"message": "Role updated successfully",
 	})
 }
 
@@ -66,25 +65,31 @@ func UpdateUserStatus(c *gin.Context) {
 
 	var request adminDto.UpdateStatusRequest
 
-	c.ShouldBindJSON(&request)
+	if err := c.ShouldBindJSON(&request); err != nil {
 
-	user, err := repositories.FindUserByID(id)
-
-	if err != nil {
-
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "User not found",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
 		})
 
 		return
 	}
 
-	user.Status = request.Status
+	err := services.UpdateUserStatusService(
+		id,
+		request.Status,
+	)
 
-	repositories.UpdateUser(&user)
+	if err != nil {
+
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Status updated",
+		"message": "Status updated successfully",
 	})
 }
 
@@ -92,18 +97,18 @@ func DeleteUser(c *gin.Context) {
 
 	id := c.Param("id")
 
-	err := repositories.DeleteUser(id)
+	err := services.DeleteUserService(id)
 
 	if err != nil {
 
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Delete failed",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
 		})
 
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "User deleted",
+		"message": "User deleted successfully",
 	})
 }

@@ -35,9 +35,15 @@ func GetAllUsers() ([]models.User, error) {
 
 	var users []models.User
 
-	err := config.DB.Find(&users).Error
+	err := config.DB.
+		Where("role != ?", "ADMIN").
+		Find(&users).Error
 
-	return users, err
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func UpdateUser(user *models.User) error {
